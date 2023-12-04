@@ -2,8 +2,8 @@ from time import sleep
 from furhat_remote_api import FurhatRemoteAPI
 import speech_recognition as sr
 import cv2
-import opencv_jupyter_ui as jcv2
 from feat import Detector
+import opencv_jupyter_ui as jcv2
 from feat.utils import FEAT_EMOTION_COLUMNS
 print("hej gabbe")
 
@@ -120,12 +120,10 @@ def interaction():
         if key == 27:  # ESC pressed
             break
 
-
+# Release resources
+cam.release()
+jcv2.destroyAllWindows()
 
 # Run the main interaction loop
 if __name__ == '__main__':
     interaction()
-
-# Release resources
-cam.release()
-jcv2.destroyAllWindows()
