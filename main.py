@@ -5,6 +5,7 @@ import cv2
 import opencv_jupyter_ui as jcv2
 from feat import Detector
 from feat.utils import FEAT_EMOTION_COLUMNS
+print("hej gabbe")
 
 # Detector choice
 detector = Detector(device="cuda")
