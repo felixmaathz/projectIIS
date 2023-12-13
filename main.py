@@ -2,27 +2,18 @@ from time import sleep
 from furhat_remote_api import FurhatRemoteAPI
 import speech_recognition as sr
 import cv2
-<<<<<<< HEAD
 from feat import Detector
 import opencv_jupyter_ui as jcv2
-=======
-import opencv_jupyter_ui as jcv2
-from feat import Detector
->>>>>>> a7786009a49cb02d62d2e624b59581187aebd605
 from feat.utils import FEAT_EMOTION_COLUMNS
 print("hej gabbe")
 
 # Detector choice
-<<<<<<< HEAD
 #detector = Detector(device="cuda")
 detector = Detector(device = "cpu")
 
 # Set up camera
 cam = cv2.VideoCapture(0)
 cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-=======
-detector = Detector(device="cuda")
->>>>>>> a7786009a49cb02d62d2e624b59581187aebd605
 
 # Furhat IP address
 FURHAT_IP = "127.0.1.1"
@@ -32,13 +23,8 @@ furhat = FurhatRemoteAPI(FURHAT_IP)
 furhat.set_led(red=100, green=50, blue=50)
 
 # Furhat faces and voices
-<<<<<<< HEAD
 FACES = {'TheJoker': 'James'}
 VOICES_EN = {'TheJoker': 'Matthew'}
-=======
-FACES = {'TheJoker': 'Brooklyn'}
-VOICES_EN = {'TheJoker': 'GregoryNeural'}
->>>>>>> a7786009a49cb02d62d2e624b59581187aebd605
 
 # Furhat speech
 def bsay(line):
@@ -102,17 +88,10 @@ def react_to_emotion(detected_emotion):
             print(f"Detected emotion: {detected_emotion}")
     # Adjust Furhat's behavior based on the detected emotion
             if detected_emotion == "happiness":
-<<<<<<< HEAD
                 bsay("you are happy like Felix")
                 furhat.gesture(name='HappyGesture')
             elif detected_emotion == "sadness":
                 bsay("you are sad like isak")
-=======
-                bsay("HAPPY")
-                furhat.gesture(name='HappyGesture')
-            elif detected_emotion == "sadness":
-                bsay("SAD")
->>>>>>> a7786009a49cb02d62d2e624b59581187aebd605
                 furhat.gesture(name='SadGesture')
             elif detected_emotion == "neutral":
                 bsay("You are neutral")
@@ -141,26 +120,10 @@ def interaction():
         if key == 27:  # ESC pressed
             break
 
-<<<<<<< HEAD
 # Release resources
 cam.release()
 jcv2.destroyAllWindows()
-=======
-# Set up camera
-cam = cv2.VideoCapture(0)
-cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
->>>>>>> a7786009a49cb02d62d2e624b59581187aebd605
 
 # Run the main interaction loop
 if __name__ == '__main__':
     interaction()
-<<<<<<< HEAD
-=======
-
-# Release resources
-cam.release()
-jcv2.destroyAllWindows()
-
-
-
->>>>>>> a7786009a49cb02d62d2e624b59581187aebd605
