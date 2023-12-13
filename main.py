@@ -2,13 +2,18 @@ from time import sleep
 from furhat_remote_api import FurhatRemoteAPI
 import speech_recognition as sr
 import cv2
-import opencv_jupyter_ui as jcv2
 from feat import Detector
+import opencv_jupyter_ui as jcv2
 from feat.utils import FEAT_EMOTION_COLUMNS
 print("hej gabbe")
 
 # Detector choice
-detector = Detector(device="cuda")
+#detector = Detector(device="cuda")
+detector = Detector(device = "cpu")
+
+# Set up camera
+cam = cv2.VideoCapture(0)
+cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
 # Furhat IP address
 FURHAT_IP = "127.0.1.1"
@@ -18,8 +23,8 @@ furhat = FurhatRemoteAPI(FURHAT_IP)
 furhat.set_led(red=100, green=50, blue=50)
 
 # Furhat faces and voices
-FACES = {'TheJoker': 'Brooklyn'}
-VOICES_EN = {'TheJoker': 'GregoryNeural'}
+FACES = {'TheJoker': 'James'}
+VOICES_EN = {'TheJoker': 'Matthew'}
 
 # Furhat speech
 def bsay(line):
@@ -83,10 +88,10 @@ def react_to_emotion(detected_emotion):
             print(f"Detected emotion: {detected_emotion}")
     # Adjust Furhat's behavior based on the detected emotion
             if detected_emotion == "happiness":
-                bsay("HAPPY")
+                bsay("you are happy like Felix")
                 furhat.gesture(name='HappyGesture')
             elif detected_emotion == "sadness":
-                bsay("SAD")
+                bsay("you are sad like isak")
                 furhat.gesture(name='SadGesture')
             elif detected_emotion == "neutral":
                 bsay("You are neutral")
@@ -115,17 +120,10 @@ def interaction():
         if key == 27:  # ESC pressed
             break
 
-# Set up camera
-cam = cv2.VideoCapture(0)
-cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-# Run the main interaction loop
-if __name__ == '__main__':
-    interaction()
-
 # Release resources
 cam.release()
 jcv2.destroyAllWindows()
 
-
-
+# Run the main interaction loop
+if __name__ == '__main__':
+    interaction()
