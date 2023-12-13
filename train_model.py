@@ -7,10 +7,10 @@ warnings.filterwarnings(action="ignore", category=FutureWarning)
 
 
 def train_model():
-
     df = pd.read_csv("data.csv").dropna()
-    labels = df["label"]
-    inputs = df.drop("label", axis=1)
+    labels = df["label"].values
+    inputs = df.drop(["label"], axis=1)
+    inputs.drop(columns=inputs.columns[0], axis=1, inplace=True)
 
     # Split data into train, validation and test sets
     # 10% validation, 20% test, 70% train
@@ -24,8 +24,7 @@ def train_model():
 
     print("Train size:", len(train_in), "Val size:", len(val_in), "Test size:", len(test_in))
 
-    model = KNeighborsClassifier(n_neighbors=20)
-
+    model = KNeighborsClassifier()
 
     k_range = list(range(1,20))
     param_grid = dict(n_neighbors=k_range)
@@ -46,11 +45,7 @@ def train_model():
     print("Test accuracy:", 
       round(accuracy_score(test_out, tuned_neighbors_output)*100, 2), 
       "%, with", grid.best_params_.get('n_neighbors'), 
-      "neighbors" )
+      "neighbors" )    
     
-
-
-
-
-train_model()
-    
+    # Save model
+    return grid 
