@@ -3,6 +3,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 import pandas as pd
 import warnings
+import pickle
 warnings.filterwarnings(action="ignore", category=FutureWarning)
 
 
@@ -48,4 +49,7 @@ def train_model():
       "neighbors" )    
     
     # Save model
-    return grid 
+    filename = 'model.sav'
+    pickle.dump(grid, open(filename, 'wb'))
+
+
