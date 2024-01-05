@@ -79,8 +79,36 @@ def detect_emotion(detector, frame, model):
     print(f"Detected emotion: {emotion}")
     return
 
-def conversation(furhat):
-    bsay("Hello, my name is Omar",furhat)
+def conversation(text,furhat,responses,emotion):
+    if text:
+        if emotion == "happy":
+            if "hello" in text.lower():
+                bsay(responses["happy"][0],furhat)
+            elif "thank you" in text.lower():
+                bsay(responses["happy"][1],furhat)
+            elif "my son just got engaged" in text.lower():
+                bsay(responses["happy"][2],furhat)
+            elif "do you have any drink recommendations" in text.lower():
+                bsay(responses["happy"][3],furhat)
+        elif emotion == "neutral":
+            if "hello" in text.lower():
+                bsay(responses["neutral"][0],furhat)
+            elif "thank you" in text.lower():
+                bsay(responses["neutral"][1],furhat)
+            elif "correct I just visited the sauna" in text.lower():
+                bsay(responses["neutral"][2],furhat)
+            elif "do you have any drink recommendations" in text.lower():
+                bsay(responses["neutral"][3],furhat)
+        elif emotion == "angry":
+            if "hello" in text.lower():
+                bsay(responses["angry"][0],furhat)
+            elif "whatever" in text.lower():
+                bsay(responses["angry"][1],furhat)
+            elif "my boss just gave my alot of work during the holiday season" in text.lower():
+                bsay(responses["angry"][2],furhat)
+            elif "give me something to drink now" in text.lower():
+                bsay(responses["angry"][3],furhat)
+
 
 
 def main():
@@ -112,10 +140,20 @@ def main():
 
     # Responses to different emotions
     emotion_responses = {
-        "happy" : "You seem very happy, have a mojito",
-        "sad" : "You seem sad, have a beer",
-        "angry" : "You seem angry, maybe you shouldnt drink",
-        "neutral" : "You seem neutral, have a beer"
+        "happy" : ["Welcome to DrinkTown, have a seat!",
+                   "You seem pretty happy today, how come?",
+                   "That’s great news, I hope he will live a happy life with his fiancee!",
+                   "Here’s a glass of champagne, it’s on the house!"],
+        "angry" : ["Welcome to DrinkTown, have a seat!",
+                   "You seem a little angry, whats going on?",
+                   "I’m sorry to hear that, I hope you will find time to visit your family",
+                   "I’m sorry but I don't. I can't serve you anything since you seem a bit agitated, but here is a glass of water to calm your nerves."
+                   ],
+        "neutral" : ["Welcome to DrinkTown, have a seat!",
+                     "You seem pretty calm today, why’s that?",
+                     "That’s great to hear, you have to prioritize your health over anything!",
+                     "Here’s a local lager to cool off, enjoy!"
+                     ],
     }
 
     try: 
@@ -128,31 +166,34 @@ def main():
                 print("Failed to grab frame")
                 break
 
-            if user_input and "hello" in user_input.lower():
-                bsay("Hello",furhat)
-                # Use a lock to prevent race conditions
-                with lock:
-                    user_input = None
-
-            if user_input and "recognize" in user_input.lower():
+            # If the user says something, detect the emotion and store in global variable
+            if user_input and not detection_started:
+                if "stop" in user_input.lower():
+                    break
                 detect_thread = threading.Thread(target=detect_emotion, args=(detector, frame, model))
                 detect_thread.start()
                 detection_started = True
-                print("Detect thread started...")                
-                with lock:
-                    user_input = None
+                print("Detect thread started...")         
             
             # Check if the detection thread has finished
-            # If it has, check the emotion and respond accordingly
-            if detection_started and not detect_thread.is_alive() and emotion:
-                response = emotion_responses.get(emotion)
-                if response:
-                    bsay(response, furhat)
-                emotion = None
-                detection_started = False
+            # If it has, respond accordingly
+            # if detection_started and not detect_thread.is_alive() and user_input:
+            #     if "stop" in user_input.lower():
+            #         break
+            #     conversation(user_input,furhat,emotion_responses,emotion)
 
+            #     with lock:
+            #         user_input = None
 
-            
+            if emotion and user_input:
+                if "stop" in user_input.lower():
+                    stop_thread = True
+                    break
+                conversation(user_input,furhat,emotion_responses,emotion)
+
+                with lock:
+                    user_input = None
+                    
             if user_input and "stop" in user_input.lower():
                 bsay("Goodbye",furhat)
                 stop_thread = True
