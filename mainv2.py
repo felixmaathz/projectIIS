@@ -7,9 +7,13 @@ from threading import Lock
 import pickle
 import cv2
 
+
+# Global variables, used between threads
 stop_thread = False
 user_input = None
 emotion = None
+
+
 lock = Lock()
 
 def load_furhat():
@@ -17,18 +21,17 @@ def load_furhat():
     furhat = FurhatRemoteAPI(FURHAT_IP)
     furhat.set_led(red=100, green=50, blue=50)
     FACES = {
-        'Worker'    : 'Omar'
+        'bartender'    : 'Omar'
     }
     VOICES_EN = {
-        'Worker'    : 'Brian'
+        'bartender'    : 'Matthew'
     }
-    furhat.set_face(character=FACES['Worker'], mask="Adult")
-    furhat.set_voice(name=VOICES_EN['Worker'])
+    furhat.set_face(character=FACES['bartender'], mask="Adult")
+    furhat.set_voice(name=VOICES_EN['bartender'])
     return furhat
 
-
 def bsay(line, fh):
-    fh.say(text=line, blocking=True)
+    fh.say(text=line, blocking=False)
 
 def recognize_speech():
     global user_input
@@ -36,12 +39,17 @@ def recognize_speech():
 
     recognizer = sr.Recognizer()
     while True: 
+
         if stop_thread:
             break
+
         with sr.Microphone() as source:
+            sleep(2)
             print("Talk!")
-            audio = recognizer.listen(source, timeout=60)
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
         try:
+            print("Recognizing...")
             text = recognizer.recognize_google(audio)
             with lock:
                 user_input = text
@@ -54,6 +62,7 @@ def recognize_speech():
 
 
 def load_camera():
+    # From lab 1
     cam = cv2.VideoCapture(0)
     cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     return cam
@@ -65,14 +74,19 @@ def detect_emotion(detector, frame, model):
     action_units = detector.detect_aus(frame, landmarks)
     action_units = action_units[0]
     emotion = model.predict(action_units)
-    return 
+    with lock:
+        emotion = emotion[0]
+    print(f"Detected emotion: {emotion}")
+    return
 
-
-
+def conversation(furhat):
+    bsay("Hello, my name is Omar",furhat)
 
 
 def main():
 
+    # Global variables
+    # Used between threads
     global emotion
     global user_input
     global stop_thread
@@ -80,14 +94,14 @@ def main():
     model = pickle.load(open('model.sav', 'rb'))
     detector = Detector(device="cuda")
 
+    furhat = load_furhat()
+    print("Furhat loaded...")
 
     cam = load_camera()
     print("Camera loaded...")
 
-    furhat = load_furhat()
-    print("Furhat loaded...")
-
-    thread = threading.Thread(target=recognize_speech)
+    # Start the speech recognition thread
+    thread = threading.Thread(target=recognize_speech, daemon=True)
     thread.start()
     print("Thread started...")
 
@@ -95,7 +109,18 @@ def main():
 
     detection_started = False
 
+
+    # Responses to different emotions
+    emotion_responses = {
+        "happy" : "You seem very happy, have a mojito",
+        "sad" : "You seem sad, have a beer",
+        "angry" : "You seem angry, maybe you shouldnt drink",
+        "neutral" : "You seem neutral, have a beer"
+    }
+
     try: 
+
+        # Main loop
         while True:
 
             ret, frame = cam.read()
@@ -109,7 +134,7 @@ def main():
                 with lock:
                     user_input = None
 
-            if user_input and "detect" in user_input.lower():
+            if user_input and "recognize" in user_input.lower():
                 detect_thread = threading.Thread(target=detect_emotion, args=(detector, frame, model))
                 detect_thread.start()
                 detection_started = True
@@ -117,19 +142,24 @@ def main():
                 with lock:
                     user_input = None
             
+            # Check if the detection thread has finished
+            # If it has, check the emotion and respond accordingly
             if detection_started and not detect_thread.is_alive() and emotion:
-                bsay(f"I think you are {emotion}",furhat)
-                print("Detect thread: ", detect_thread.is_alive())
+                response = emotion_responses.get(emotion)
+                if response:
+                    bsay(response, furhat)
                 emotion = None
                 detection_started = False
 
+
+            
             if user_input and "stop" in user_input.lower():
                 bsay("Goodbye",furhat)
                 stop_thread = True
                 break
 
-
             if cv2.waitKey(1) == ord("q"):
+                print("Pressed q")
                 break
 
             cv2.imshow("frame", frame)
