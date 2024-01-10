@@ -13,9 +13,10 @@ stop_thread = False
 user_input = None
 emotion = None
 
-
+# Lock to prevent race conditions
 lock = Lock()
 
+# From lab 3
 def load_furhat():
     FURHAT_IP = "127.0.1.1"
     furhat = FurhatRemoteAPI(FURHAT_IP)
@@ -34,9 +35,12 @@ def bsay(line, fh):
     fh.say(text=line, blocking=False)
 
 def recognize_speech():
+
+    # Global variables
     global user_input
     global stop_thread
 
+    # Speech recognition, from lab 3
     recognizer = sr.Recognizer()
     while True: 
 
@@ -68,7 +72,10 @@ def load_camera():
     return cam
 
 def detect_emotion(detector, frame, model):
+    # Global variable
     global emotion
+
+    # Detect emotion, from lab 1
     faces = detector.detect_faces(frame)
     landmarks = detector.detect_landmarks(frame, faces)    
     action_units = detector.detect_aus(frame, landmarks)
@@ -77,9 +84,10 @@ def detect_emotion(detector, frame, model):
     with lock:
         emotion = emotion[0]
     print(f"Detected emotion: {emotion}")
-    return
+    return # Closes thread
 
 def conversation(text,furhat,responses,emotion):
+    # Rule based system to respond to the user
     if text:
         if emotion == "happy":
             if "hello" in text.lower():
@@ -90,6 +98,7 @@ def conversation(text,furhat,responses,emotion):
                 bsay(responses["happy"][2],furhat)
             elif "do you have any drink recommendations" in text.lower():
                 bsay(responses["happy"][3],furhat)
+
         elif emotion == "neutral":
             if "hello" in text.lower():
                 bsay(responses["neutral"][0],furhat)
@@ -99,6 +108,7 @@ def conversation(text,furhat,responses,emotion):
                 bsay(responses["neutral"][2],furhat)
             elif "do you have any drink recommendations" in text.lower():
                 bsay(responses["neutral"][3],furhat)
+                
         elif emotion == "angry":
             if "hello" in text.lower():
                 bsay(responses["angry"][0],furhat)
@@ -122,6 +132,7 @@ def main():
     model = pickle.load(open('model.sav', 'rb'))
     detector = Detector(device="cuda")
 
+    # Load furhat and camera
     furhat = load_furhat()
     print("Furhat loaded...")
 
@@ -160,7 +171,8 @@ def main():
 
         # Main loop
         while True:
-
+            
+            # Read frame from camera, from lab 1
             ret, frame = cam.read()
             if not ret:
                 print("Failed to grab frame")
@@ -174,20 +186,11 @@ def main():
                 detect_thread.start()
                 detection_started = True
                 print("Detect thread started...")         
-            
-            # Check if the detection thread has finished
-            # If it has, respond accordingly
-            # if detection_started and not detect_thread.is_alive() and user_input:
-            #     if "stop" in user_input.lower():
-            #         break
-            #     conversation(user_input,furhat,emotion_responses,emotion)
-
-            #     with lock:
-            #         user_input = None
 
 
             # Check if the detection thread has finished, ie. emotion has been detected
             if emotion and user_input:
+
                 # If the user says "reset", reset the emotion
                 # Used for testing
                 if "reset" in user_input.lower():
@@ -196,6 +199,7 @@ def main():
                     with lock:
                         user_input = None
                     continue
+
                 # If the user says "stop", stop the program
                 if "stop" in user_input.lower():
                     stop_thread = True
@@ -206,7 +210,8 @@ def main():
 
                 with lock:
                     user_input = None
-                    
+            
+            # If the user says "stop", stop the program
             if user_input and "stop" in user_input.lower():
                 bsay("Goodbye",furhat)
                 stop_thread = True
@@ -216,9 +221,12 @@ def main():
                 print("Pressed q")
                 break
 
+
+            # Show the frame
             cv2.imshow("frame", frame)
 
     finally:
+        # Stop the threads
         thread.join()
         print("Stopped thread")
         cam.release()
