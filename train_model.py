@@ -1,6 +1,7 @@
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
 import pandas as pd
 import warnings
 import pickle
@@ -48,8 +49,12 @@ def train_model():
       "%, with", grid.best_params_.get('n_neighbors'), 
       "neighbors" )    
     
+    # Print classification report
+    print(classification_report(test_out, tuned_neighbors_output))
+    
     # Save model
     filename = 'model.sav'
     pickle.dump(grid, open(filename, 'wb'))
 
 
+train_model() 
